@@ -2,9 +2,16 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmConfigService } from 'common';
+import { ConfigModule } from '@nestjs/config';
+import { ApiModule } from './api/api.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     ClientsModule.register([
       {
         name: 'WALLET_SERVICE',
@@ -20,6 +27,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       },
     ]),
+    TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
+    ApiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
