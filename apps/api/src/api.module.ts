@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from 'common';
 import { ConfigModule } from '@nestjs/config';
-import { ApiModule } from './api/api.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ApiService } from './api.service';
+import { ApiController } from './api.controller';
+import { TypeOrmConfigService } from 'apps/api/src/lib';
 
 @Module({
   imports: [
@@ -28,9 +27,8 @@ import { ApiModule } from './api/api.module';
       },
     ]),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
-    ApiModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [ApiController],
+  providers: [ApiService, TypeOrmConfigService],
 })
-export class AppModule {}
+export class ApiModule {}

@@ -1,11 +1,11 @@
 version: "1"
 services:
-  wallet:
+  api:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: builder
-    command: yarn run start:dev
+      dockerfile: ./apps/api/Dockerfile
+      target: development
+    command: yarn run start:dev api
     ports:
       - '3000:3000'
     volumes:

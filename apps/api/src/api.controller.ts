@@ -1,17 +1,17 @@
 import { Controller, Get, Inject } from '@nestjs/common';
-import { AppService } from './app.service';
 import { ClientKafka } from '@nestjs/microservices';
+import { ApiService } from './api.service';
 
-@Controller()
-export class AppController {
+@Controller('api')
+export class ApiController {
   constructor(
-    private readonly appService: AppService,
+    private readonly apiService: ApiService,
     @Inject('WALLET_SERVICE') private readonly client: ClientKafka,
   ) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('hello')
+  sayHello(): string {
+    return this.apiService.sayHello();
   }
 
   @Get('kafka-test')
