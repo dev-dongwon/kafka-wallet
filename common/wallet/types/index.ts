@@ -1,0 +1,1 @@
+export * from './walletResponse.interface';
