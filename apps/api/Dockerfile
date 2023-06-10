@@ -9,6 +9,7 @@ COPY nest-cli.json nest-cli.json
 RUN yarn install --frozen-lockfile
 
 COPY apps/api apps/api
+COPY common common
 
 RUN yarn build api
 
