@@ -11,6 +11,17 @@ services:
     volumes:
       - .:/usr/src/app
 
+  consumer:
+    build:
+      context: .
+      dockerfile: ./apps/consumer/Dockerfile
+      target: development
+    command: yarn run start:dev consumer
+    ports:
+      - '3001:3001'
+    volumes:
+      - .:/usr/src/app
+
   postgres:
     image: postgres:latest
     restart: always

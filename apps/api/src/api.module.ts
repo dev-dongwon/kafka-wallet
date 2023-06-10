@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ApiService } from './api.service';
 import { ApiController } from './api.controller';
-import { TypeOrmConfigService } from 'apps/api/src/lib';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmConfigService } from 'common';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    LoggerModule.forRoot(),
     ClientsModule.register([
       {
         name: 'WALLET_SERVICE',
@@ -29,6 +31,6 @@ import { TypeOrmConfigService } from 'apps/api/src/lib';
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
   ],
   controllers: [ApiController],
-  providers: [ApiService, TypeOrmConfigService],
+  providers: [ApiService],
 })
 export class ApiModule {}
