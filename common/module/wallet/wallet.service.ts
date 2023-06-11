@@ -1,17 +1,35 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { WalletRepository } from './wallet.repository';
 import { CreateWalletsDto, DepositOrWithdrawDto } from './dto';
-import { TransactionHistoryEntity, TransactionType } from 'common';
+import {
+  TransactionHistoryEntity,
+  TransactionStatus,
+  TransactionType,
+  WalletsEntity,
+} from 'common';
 import { isUUID } from 'class-validator';
 import BigNumber from 'bignumber.js';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class WalletService {
-  constructor(private readonly walletRepository: WalletRepository) {}
+  constructor(
+    private readonly walletRepository: WalletRepository,
+    private dataSource: DataSource,
+  ) {}
 
   async getWallet(id: string) {
     this.validateGetWalletDto(id);
     return await this.walletRepository.findOneWallet(id);
+  }
+
+  async findOneTransaction(id: number) {
+    return await this.walletRepository.findOneTransactions(id);
   }
 
   public validateGetWalletDto(id: string) {
@@ -63,5 +81,67 @@ export class WalletService {
       existWallet,
       depositOrWithdrawDto,
     );
+  }
+
+  async findAllTransactions(filter: {
+    type?: TransactionType;
+    status?: TransactionStatus;
+    walletId?: string;
+  }) {
+    const queryBuilder = this.dataSource
+      .getRepository(TransactionHistoryEntity)
+      .createQueryBuilder('transactions')
+      .leftJoinAndSelect('transactions.wallet', 'wallet');
+
+    if (filter.walletId) {
+      queryBuilder.andWhere('transactions.walletId = :walletId', {
+        walletId: filter.walletId,
+      });
+    }
+
+    if (filter.status) {
+      queryBuilder.andWhere('transactions.status = :status', {
+        status: filter.status,
+      });
+    }
+
+    if (filter.type) {
+      queryBuilder.andWhere('transactions.type = :type', { type: filter.type });
+    }
+
+    queryBuilder.orderBy('transactions.createdAt', 'ASC');
+
+    return queryBuilder.getMany();
+  }
+
+  async processPendingTransactions(
+    transaction: TransactionHistoryEntity,
+    wallet: WalletsEntity,
+  ): Promise<void> {
+    if (transaction.type === TransactionType.WITHDRAW) {
+      wallet.pendingWithdraw = BigNumber(wallet.pendingWithdraw)
+        .minus(transaction.amount)
+        .toNumber();
+    }
+
+    if (transaction.type === TransactionType.DEPOSIT) {
+      wallet.pendingDeposit = BigNumber(wallet.pendingDeposit)
+        .minus(transaction.amount)
+        .toNumber();
+    }
+
+    transaction.status = TransactionStatus.COMPLETED;
+
+    try {
+      await this.dataSource.transaction('SERIALIZABLE', async (manager) => {
+        await manager.save(wallet);
+        await manager.save(transaction);
+      });
+    } catch (error) {
+      throw new HttpException(
+        'transaction is failed',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
   }
 }

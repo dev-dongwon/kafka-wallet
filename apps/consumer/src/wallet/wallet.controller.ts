@@ -12,7 +12,9 @@ import {
 import {
   DepositOrWithdrawDto,
   EventType,
+  ProcessTransactionResponseInterface,
   TransactionHistoryEntity,
+  TransactionType,
   WalletsEntity,
 } from 'common';
 import { WalletService } from 'common/module/wallet/wallet.service';
@@ -27,7 +29,7 @@ export class WalletController {
     @Payload() message: { balance: number },
     @Ctx() context: KafkaContext,
   ): Promise<WalletsEntity> {
-    return await this.walletService.createWallet({balance: message.balance});
+    return await this.walletService.createWallet({ balance: message.balance });
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
@@ -37,5 +39,28 @@ export class WalletController {
     @Ctx() context: KafkaContext,
   ): Promise<TransactionHistoryEntity> {
     return await this.walletService.depositOrWithdraw(message);
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @MessagePattern(EventType.PROCESS_PENDING_TRANSACTIONS)
+  async processPendingTransactions(
+    @Payload() message: TransactionHistoryEntity[],
+    @Ctx() context: KafkaContext,
+  ): Promise<ProcessTransactionResponseInterface> {
+    for (const transaction of message) {
+      const tx = await this.walletService.findOneTransaction(transaction.id);
+      const wallet = await this.walletService.getWallet(transaction.wallet.id);
+
+      await this.walletService.processPendingTransactions(tx, wallet);
+    }
+
+    return {
+      completedDepositCount: message.filter(
+        (r) => r.type === TransactionType.DEPOSIT,
+      ).length,
+      completedWithdrawCount: message.filter(
+        (r) => r.type === TransactionType.WITHDRAW,
+      ).length,
+    };
   }
 }

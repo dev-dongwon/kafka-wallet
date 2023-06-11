@@ -47,6 +47,23 @@ export class WalletRepository {
     }
   }
 
+  async findOneTransactions(id: number): Promise<TransactionHistoryEntity> {
+    try {
+      const transaction = await TransactionHistoryEntity.findOneBy({ id });
+
+      if (!transaction) {
+        throw new NotFoundException('transaction not found');
+      }
+
+      return transaction;
+    } catch (error) {
+      throw new HttpException(
+        'failed to find the transaction',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+  }
+
   async createTransactionHistory(
     wallet: WalletsEntity,
     { amount, type }: DepositOrWithdrawDto,
@@ -55,6 +72,21 @@ export class WalletRepository {
       type === TransactionType.WITHDRAW
         ? BigNumber(wallet.availableBalance).minus(amount).toNumber()
         : wallet.availableBalance;
+
+    switch (type) {
+      case TransactionType.DEPOSIT:
+        wallet.pendingDeposit = BigNumber(wallet.pendingDeposit)
+          .plus(amount)
+          .toNumber();
+        break;
+      case TransactionType.WITHDRAW:
+        wallet.pendingWithdraw = BigNumber(wallet.pendingWithdraw)
+          .plus(amount)
+          .toNumber();
+        break;
+      default:
+        break;
+    }
 
     const historyModel = new TransactionHistoryEntity();
     historyModel.wallet = wallet;
