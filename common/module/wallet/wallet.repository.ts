@@ -8,6 +8,7 @@ import BigNumber from 'bignumber.js';
 import { DataSource } from 'typeorm';
 import {
   DepositOrWithdrawDto,
+  ErrorMessage,
   TransactionHistoryEntity,
   TransactionType,
   WalletsEntity,
@@ -24,7 +25,7 @@ export class WalletRepository {
       return await model.save();
     } catch (error) {
       throw new HttpException(
-        'failed to create wallet',
+        ErrorMessage.CREATE_RESOURCE_FAILED,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -35,13 +36,13 @@ export class WalletRepository {
       const existWallet = await WalletsEntity.findOneBy({ id });
 
       if (!existWallet) {
-        throw new NotFoundException('wallet not found');
+        throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
       }
 
       return existWallet;
     } catch (error) {
       throw new HttpException(
-        'failed to find the wallet',
+        ErrorMessage.FAILED_TASK_PROCESSING,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -52,13 +53,13 @@ export class WalletRepository {
       const transaction = await TransactionHistoryEntity.findOneBy({ id });
 
       if (!transaction) {
-        throw new NotFoundException('transaction not found');
+        throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
       }
 
       return transaction;
     } catch (error) {
       throw new HttpException(
-        'failed to find the transaction',
+        ErrorMessage.FAILED_TASK_PROCESSING,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -102,7 +103,7 @@ export class WalletRepository {
       });
     } catch (error) {
       throw new HttpException(
-        'Withdraw transaction is failed',
+        ErrorMessage.FAILED_TASK_PROCESSING,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

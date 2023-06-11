@@ -7,6 +7,7 @@ import {
 import { WalletRepository } from './wallet.repository';
 import { CreateWalletsDto, DepositOrWithdrawDto } from './dto';
 import {
+  ErrorMessage,
   PaginationOrder,
   TransactionHistoryEntity,
   TransactionStatus,
@@ -35,7 +36,9 @@ export class WalletService {
 
   public validateWalletId(id: string) {
     if (!isUUID(id)) {
-      throw new UnprocessableEntityException('wallet Id must be uuid format');
+      throw new UnprocessableEntityException(
+        ErrorMessage.WALLET_FORMAT_VIOLATION,
+      );
     }
   }
 
@@ -43,7 +46,7 @@ export class WalletService {
     const { balance } = createWalletDto;
 
     if (balance < 0) {
-      throw new UnprocessableEntityException('balance must be greater than 0');
+      throw new UnprocessableEntityException(ErrorMessage.BALANCE_UNDER_ZERO);
     }
   }
 
@@ -59,7 +62,7 @@ export class WalletService {
       type === TransactionType.WITHDRAW
     ) {
       throw new UnprocessableEntityException(
-        'availableBalance must be greater than withdraw amount',
+        ErrorMessage.BALANCE_UNDER_WITHDRAW,
       );
     }
   }
@@ -174,6 +177,10 @@ export class WalletService {
       wallet.pendingDeposit = BigNumber(wallet.pendingDeposit)
         .minus(transaction.amount)
         .toNumber();
+
+      wallet.availableBalance = BigNumber(wallet.availableBalance)
+        .plus(transaction.amount)
+        .toNumber();
     }
 
     transaction.status = TransactionStatus.COMPLETED;
@@ -185,7 +192,7 @@ export class WalletService {
       });
     } catch (error) {
       throw new HttpException(
-        'transaction is failed',
+        ErrorMessage.DB_TRANSACTION_FAILED,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

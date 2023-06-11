@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import { DataSource } from 'typeorm';
 import {
   DepositOrWithdrawDto,
+  ErrorMessage,
   TransactionHistoryEntity,
   TransactionType,
   WalletsEntity,
@@ -19,7 +20,7 @@ export class WalletRepository {
       return await model.save();
     } catch (error) {
       throw new HttpException(
-        'failed to create wallet',
+        ErrorMessage.CREATE_RESOURCE_FAILED,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -30,7 +31,7 @@ export class WalletRepository {
       return await WalletsEntity.findOneBy({ id });
     } catch (error) {
       throw new HttpException(
-        'failed to find the wallet',
+        ErrorMessage.FAILED_TASK_PROCESSING,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -59,7 +60,7 @@ export class WalletRepository {
       });
     } catch (error) {
       throw new HttpException(
-        'Withdraw transaction is failed',
+        ErrorMessage.DB_TRANSACTION_FAILED,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

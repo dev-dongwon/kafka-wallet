@@ -9,12 +9,12 @@ import { ClientKafka } from '@nestjs/microservices';
 import {
   CreateWalletsDto,
   DepositOrWithdrawDto,
+  ErrorMessage,
   EventType,
   TransactionHistoryEntity,
 } from 'common';
 import { WalletService } from 'common/module/wallet/wallet.service';
 import { catchError, lastValueFrom, of } from 'rxjs';
-import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class ApiService implements OnModuleInit {
@@ -45,10 +45,7 @@ export class ApiService implements OnModuleInit {
         .pipe(catchError((val) => of({ error: val.message }))),
     );
 
-    this.kafkaErrorHandling(
-      response,
-      'wallet is not created, please retry after a few seconds',
-    );
+    this.kafkaErrorHandling(response, ErrorMessage.FAILED_TASK_PROCESSING);
 
     return response;
   }
@@ -64,10 +61,7 @@ export class ApiService implements OnModuleInit {
         .pipe(catchError((val) => of({ error: val.message }))),
     );
 
-    this.kafkaErrorHandling(
-      response,
-      'transaction is failed, please retry after a few seconds',
-    );
+    this.kafkaErrorHandling(response, ErrorMessage.FAILED_TASK_PROCESSING);
 
     return response;
   }
@@ -79,10 +73,7 @@ export class ApiService implements OnModuleInit {
         .pipe(catchError((val) => of({ error: val.message }))),
     );
 
-    this.kafkaErrorHandling(
-      response,
-      'transaction is failed, please retry after a few seconds',
-    );
+    this.kafkaErrorHandling(response, ErrorMessage.FAILED_TASK_PROCESSING);
 
     return response;
   }
