@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ApiService } from './api.service';
-import { ApiController } from './api.controller';
+// import { ApiController } from './api.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService, WalletModule } from 'common';
 import { LoggerModule } from 'nestjs-pino';
+import { WalletController } from './controllers/wallet.controller';
+import { TransactionsController } from './controllers/transaction.controller';
 
 @Module({
   imports: [
@@ -40,7 +42,7 @@ import { LoggerModule } from 'nestjs-pino';
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
     WalletModule,
   ],
-  controllers: [ApiController],
+  controllers: [WalletController, TransactionsController],
   providers: [ApiService],
 })
 export class ApiModule {}
