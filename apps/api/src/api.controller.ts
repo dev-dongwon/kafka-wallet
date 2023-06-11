@@ -2,6 +2,8 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Get,
+  Param,
   Post,
   UseInterceptors,
 } from '@nestjs/common';
@@ -16,30 +18,41 @@ import {
   WalletsEntity,
 } from 'common';
 import { DepositOrWithdrawDto } from 'common/wallet/dto/depositOrWithdraw.dto';
+import { WalletService } from 'common/wallet/wallet.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
-@Controller('api')
+@Controller('api/wallets')
 export class ApiController {
-  constructor(private readonly apiService: ApiService) {}
+  constructor(
+    private readonly apiService: ApiService,
+    private readonly walletService: WalletService,
+  ) {}
 
-  @Post('wallets')
+  @Post('')
   async createWallet(
     @Body() createWalletDto: CreateWalletsDto,
   ): Promise<WalletResponseInterface> {
     const message = await this.apiService.createWallet(createWalletDto);
-    const createdWallet = await WalletsEntity.findOneBy({ id: message.id });
+    const wallet = await WalletsEntity.findOneBy({ id: message.id });
 
-    return new WalletPresenter(createdWallet);
+    return new WalletPresenter(wallet);
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
-  @Post('wallets/transactions')
+  @Get(':id')
+  async getWallet(@Param('id') id: string): Promise<WalletResponseInterface> {
+    const wallet = await this.walletService.getWallet(id);
+
+    return new WalletPresenter(wallet);
+  }
+
+  @Post('transactions')
   async depositOrWithdraw(
     @Body() depositOrWithdrawDto: DepositOrWithdrawDto,
   ): Promise<TransactionHistoryResponseInterface> {
     const message = await this.apiService.depositOrWithdraw(
       depositOrWithdrawDto,
     );
+
     const transactionHistory = await TransactionHistoryEntity.findOneBy({
       id: message.id,
     });

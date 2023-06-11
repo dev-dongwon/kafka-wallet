@@ -4,7 +4,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ApiService } from './api.service';
 import { ApiController } from './api.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from 'common';
+import { TypeOrmConfigService, WalletModule } from 'common';
 import { LoggerModule } from 'nestjs-pino';
 
 @Module({
@@ -12,7 +12,16 @@ import { LoggerModule } from 'nestjs-pino';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    LoggerModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+        },
+      },
+    }),
     ClientsModule.register([
       {
         name: 'WALLET_SERVICE',
@@ -29,6 +38,7 @@ import { LoggerModule } from 'nestjs-pino';
       },
     ]),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
+    WalletModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],
