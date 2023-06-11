@@ -13,4 +13,5 @@ export enum EventType {
   DEPOSIT_OR_WITHDRAW = 'depositOrWithdraw',
   DEPOSIT = 'deposit',
   WITHDRAW = 'withdraw',
+  PROCESS_PENDING_TRANSACTIONS = 'processPendingTransactions',
 }
