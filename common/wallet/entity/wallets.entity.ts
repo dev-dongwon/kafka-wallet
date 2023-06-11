@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { WalletStatus } from 'common/Enums/enums';
 import { CommonEntity } from 'common/entity/common.entity';
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { TransactionEntity } from './transaction.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { TransactionHistoryEntity } from './transaction.entity';
 
 @Entity({
   name: 'wallets',
@@ -17,15 +11,18 @@ export class WalletsEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'bigint' })
+  @Column()
   availableBalance: string;
 
-  @Column({ type: 'bigint', nullable: true, default: null })
-  pendingBalance?: string | null;
+  @Column({nullable: true, default: null })
+  pendingWithdraw?: string | null;
 
-  @Column({ type: 'enum', name: 'wallet_status', enum: WalletStatus })
-  status!: WalletStatus;
+  @Column({nullable: true, default: null })
+  pendingDeposit?: string | null;
 
-  @OneToMany(() => TransactionEntity, (transaction) => transaction.wallet)
-  transactions: TransactionEntity[];
+  @OneToMany(
+    () => TransactionHistoryEntity,
+    (transaction) => transaction.wallet,
+  )
+  transactions: TransactionHistoryEntity[];
 }
