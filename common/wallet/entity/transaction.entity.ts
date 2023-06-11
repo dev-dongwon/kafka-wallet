@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { WalletsEntity } from './wallets.entity';
 
 @Entity({
-  name: 'transactions',
+  name: 'transaction_history',
 })
 @Injectable()
 export class TransactionHistoryEntity extends CommonEntity {
