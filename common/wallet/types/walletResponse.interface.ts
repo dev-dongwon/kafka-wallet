@@ -1,8 +1,10 @@
-import { WalletStatus } from 'common/Enums';
+import { TransactionStatus, TransactionType } from 'common';
 
 export interface WalletResponseInterface {
   id: string;
   availableBalance: string;
-  status: WalletStatus;
-  pendingBalance?: string;
+  pendingDeposit?: string;
+  pendingWithdraw?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
