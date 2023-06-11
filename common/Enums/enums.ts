@@ -15,3 +15,8 @@ export enum EventType {
   WITHDRAW = 'withdraw',
   PROCESS_PENDING_TRANSACTIONS = 'processPendingTransactions',
 }
+
+export enum PaginationOrder {
+  DESC = 'DESC',
+  ASC = 'ASC',
+}

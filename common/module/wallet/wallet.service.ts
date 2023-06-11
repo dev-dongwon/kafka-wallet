@@ -7,6 +7,7 @@ import {
 import { WalletRepository } from './wallet.repository';
 import { CreateWalletsDto, DepositOrWithdrawDto } from './dto';
 import {
+  PaginationOrder,
   TransactionHistoryEntity,
   TransactionStatus,
   TransactionType,
@@ -24,7 +25,7 @@ export class WalletService {
   ) {}
 
   async getWallet(id: string) {
-    this.validateGetWalletDto(id);
+    this.validateWalletId(id);
     return await this.walletRepository.findOneWallet(id);
   }
 
@@ -32,7 +33,7 @@ export class WalletService {
     return await this.walletRepository.findOneTransactions(id);
   }
 
-  public validateGetWalletDto(id: string) {
+  public validateWalletId(id: string) {
     if (!isUUID(id)) {
       throw new UnprocessableEntityException('wallet Id must be uuid format');
     }
@@ -84,9 +85,12 @@ export class WalletService {
   }
 
   async findAllTransactions(filter: {
+    limit?: number;
+    offset?: number;
     type?: TransactionType;
     status?: TransactionStatus;
     walletId?: string;
+    order?: PaginationOrder;
   }) {
     const queryBuilder = this.dataSource
       .getRepository(TransactionHistoryEntity)
@@ -94,8 +98,9 @@ export class WalletService {
       .leftJoinAndSelect('transactions.wallet', 'wallet');
 
     if (filter.walletId) {
-      queryBuilder.andWhere('transactions.walletId = :walletId', {
-        walletId: filter.walletId,
+      this.validateWalletId(filter.walletId);
+      queryBuilder.andWhere('transactions.wallet = :id', {
+        id: filter.walletId,
       });
     }
 
@@ -109,9 +114,50 @@ export class WalletService {
       queryBuilder.andWhere('transactions.type = :type', { type: filter.type });
     }
 
-    queryBuilder.orderBy('transactions.createdAt', 'ASC');
+    queryBuilder.orderBy(
+      'transactions.createdAt',
+      filter.order ?? PaginationOrder.ASC,
+    );
 
-    return queryBuilder.getMany();
+    if (filter.limit) {
+      queryBuilder.take(filter.limit);
+    }
+
+    if (filter.offset) {
+      queryBuilder.skip((filter.offset - 1) * filter.limit);
+    }
+
+    const totalCount = await queryBuilder.getCount();
+    const transactions = await queryBuilder.getMany();
+
+    return {
+      data: transactions,
+      metadata:
+        filter.limit && filter.offset
+          ? {
+              ...this.getPaginationMetadata(
+                totalCount,
+                filter.offset,
+                filter.limit,
+              ),
+            }
+          : undefined,
+    };
+  }
+
+  private getPaginationMetadata(
+    totalCount: number,
+    currentOffset: number,
+    limit: number,
+  ) {
+    const lastIndex = Math.ceil(totalCount / limit);
+    const nextIndex = currentOffset + 1 > lastIndex ? null : currentOffset + 1;
+
+    return {
+      totalCount,
+      nextIndex,
+      lastIndex,
+    };
   }
 
   async processPendingTransactions(
