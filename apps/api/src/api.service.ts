@@ -6,9 +6,15 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { CreateWalletsDto, DepositOrWithdrawDto, EventType } from 'common';
+import {
+  CreateWalletsDto,
+  DepositOrWithdrawDto,
+  EventType,
+  TransactionHistoryEntity,
+} from 'common';
 import { WalletService } from 'common/module/wallet/wallet.service';
 import { catchError, lastValueFrom, of } from 'rxjs';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class ApiService implements OnModuleInit {
@@ -24,6 +30,12 @@ export class ApiService implements OnModuleInit {
     await this.client.connect();
   }
 
+  private kafkaErrorHandling(response: Object, message: string) {
+    if (Object.keys(response).includes('error')) {
+      throw new HttpException(message, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+  }
+
   async createWallet({ balance }: CreateWalletsDto): Promise<any> {
     this.walletService.validateCreateWalletDto({ balance });
 
@@ -33,12 +45,10 @@ export class ApiService implements OnModuleInit {
         .pipe(catchError((val) => of({ error: val.message }))),
     );
 
-    if (Object.keys(response).includes('error')) {
-      throw new HttpException(
-        'wallet is not created, please retry after a few seconds',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
+    this.kafkaErrorHandling(
+      response,
+      'wallet is not created, please retry after a few seconds',
+    );
 
     return response;
   }
@@ -54,12 +64,25 @@ export class ApiService implements OnModuleInit {
         .pipe(catchError((val) => of({ error: val.message }))),
     );
 
-    if (Object.keys(response).includes('error')) {
-      throw new HttpException(
-        'transaction is failed, please retry after a few seconds',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
+    this.kafkaErrorHandling(
+      response,
+      'transaction is failed, please retry after a few seconds',
+    );
+
+    return response;
+  }
+
+  async processTransactions(transactions: TransactionHistoryEntity[]) {
+    const response = await lastValueFrom(
+      this.client
+        .send(EventType.PROCESS_PENDING_TRANSACTIONS, transactions)
+        .pipe(catchError((val) => of({ error: val.message }))),
+    );
+
+    this.kafkaErrorHandling(
+      response,
+      'transaction is failed, please retry after a few seconds',
+    );
 
     return response;
   }
