@@ -10,7 +10,7 @@ import { WalletsEntity } from './wallets.entity';
 @Injectable()
 export class TransactionHistoryEntity extends CommonEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @ManyToOne(() => WalletsEntity, (wallet) => wallet.id, { eager: true })
   wallet: WalletsEntity;
