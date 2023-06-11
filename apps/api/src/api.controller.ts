@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UseInterceptors,
 } from '@nestjs/common';
@@ -11,11 +12,13 @@ import { ApiService } from './api.service';
 import {
   CreateTransactionPresenter,
   CreateWalletsDto,
-  TransactionHistoryEntity,
+  ProcessTransactionResponseInterface,
+  ProcessTransactionsPresenter,
   TransactionHistoryResponseInterface,
+  TransactionStatus,
+  TransactionType,
   WalletPresenter,
   WalletResponseInterface,
-  WalletsEntity,
 } from 'common';
 import { DepositOrWithdrawDto } from 'common/module/wallet/dto/depositOrWithdraw.dto';
 import { WalletService } from 'common/module/wallet/wallet.service';
@@ -33,7 +36,7 @@ export class ApiController {
     @Body() createWalletDto: CreateWalletsDto,
   ): Promise<WalletResponseInterface> {
     const message = await this.apiService.createWallet(createWalletDto);
-    const wallet = await WalletsEntity.findOneBy({ id: message.id });
+    const wallet = await this.walletService.getWallet(message.id);
 
     return new WalletPresenter(wallet);
   }
@@ -53,10 +56,23 @@ export class ApiController {
       depositOrWithdrawDto,
     );
 
-    const transactionHistory = await TransactionHistoryEntity.findOneBy({
-      id: message.id,
-    });
+    const transactionHistory = await this.walletService.findOneTransaction(
+      message.id,
+    );
 
     return new CreateTransactionPresenter(transactionHistory);
+  }
+
+  @Patch('transactions')
+  async processTransactions(): Promise<ProcessTransactionResponseInterface> {
+    const pendingTransactions = await this.walletService.findAllTransactions({
+      status: TransactionStatus.PENDING,
+    });
+
+    const completedCounts = await this.apiService.processTransactions(
+      pendingTransactions,
+    );
+
+    return new ProcessTransactionsPresenter(completedCounts);
   }
 }
