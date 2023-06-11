@@ -10,21 +10,32 @@ import {
   Payload,
 } from '@nestjs/microservices';
 import { WalletService } from './wallet.service';
-import { WalletsEntity } from 'common';
+import {
+  DepositOrWithdrawDto,
+  EventType,
+  TransactionHistoryEntity,
+  WalletsEntity,
+} from 'common';
 
 @Controller()
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @MessagePattern('createWallet')
+  @MessagePattern(EventType.CREATE_WALLET)
   async createWallet(
-    @Payload() message: any,
+    @Payload() message: { balance: number },
     @Ctx() context: KafkaContext,
   ): Promise<WalletsEntity> {
-    const user = await this.walletService.createUser(4);
-    console.log('this is message', user);
+    return await this.walletService.createWallet(message.balance);
+  }
 
-    return user;
+  @UseInterceptors(ClassSerializerInterceptor)
+  @MessagePattern(EventType.DEPOSIT_OR_WITHDRAW)
+  async createTransactionHistory(
+    @Payload() message: DepositOrWithdrawDto,
+    @Ctx() context: KafkaContext,
+  ): Promise<TransactionHistoryEntity> {
+    return await this.walletService.depositOrWithdraw(message);
   }
 }

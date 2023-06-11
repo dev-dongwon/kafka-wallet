@@ -5,8 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from 'common';
-import { WalletService } from './wallet/wallet.service';
-import { WalletController } from './wallet/wallet.controller';
 import { WalletModule } from './wallet/wallet.module';
 
 @Module({
