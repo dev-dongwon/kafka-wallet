@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsUUID, isEnum } from 'class-validator';
 import { TransactionType } from 'common';
 
 export class DepositOrWithdrawDto {
@@ -6,7 +6,7 @@ export class DepositOrWithdrawDto {
   @IsNotEmpty()
   walletId: string;
 
-  @IsNumber()
+  @IsEnum(Object.values(TransactionType))
   @IsNotEmpty()
   type: TransactionType;
 
