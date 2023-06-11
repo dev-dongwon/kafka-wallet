@@ -36,9 +36,7 @@ export class WalletService {
     const existWallet = await this.getWallet(walletId);
 
     if (
-      new BigNumber(existWallet.availableBalance).isLessThan(
-        BigNumber(amount),
-      ) &&
+      new BigNumber(existWallet.availableBalance).minus(amount).isLessThan(0) &&
       type === TransactionType.WITHDRAW
     ) {
       throw new UnprocessableEntityException(

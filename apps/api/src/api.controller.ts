@@ -17,8 +17,8 @@ import {
   WalletResponseInterface,
   WalletsEntity,
 } from 'common';
-import { DepositOrWithdrawDto } from 'common/wallet/dto/depositOrWithdraw.dto';
-import { WalletService } from 'common/wallet/wallet.service';
+import { DepositOrWithdrawDto } from 'common/module/wallet/dto/depositOrWithdraw.dto';
+import { WalletService } from 'common/module/wallet/wallet.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('api/wallets')

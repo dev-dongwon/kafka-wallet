@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { TransactionHistoryEntity } from 'common/wallet/entity/transaction.entity';
-import { WalletsEntity } from 'common/wallet/entity/wallets.entity';
+import { TransactionHistoryEntity } from 'common/module/wallet/entity/transaction.entity';
+import { WalletsEntity } from 'common';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {

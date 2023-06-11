@@ -1,14 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import BigNumber from 'bignumber.js';
 import { DataSource } from 'typeorm';
 import {
   DepositOrWithdrawDto,
   TransactionHistoryEntity,
+  TransactionType,
   WalletsEntity,
 } from 'common';
 
@@ -16,10 +12,10 @@ import {
 export class WalletRepository {
   constructor(private dataSource: DataSource) {}
 
-  async create(balance: number): Promise<WalletsEntity> {
+  async createWallet(balance: number): Promise<WalletsEntity> {
     try {
       const model = WalletsEntity.create();
-      model.availableBalance = BigNumber(balance).toString();
+      model.availableBalance = balance;
       return await model.save();
     } catch (error) {
       throw new HttpException(
@@ -31,13 +27,7 @@ export class WalletRepository {
 
   async findOneWallet(id: string): Promise<WalletsEntity> {
     try {
-      const existWallet = await WalletsEntity.findOneBy({ id });
-
-      if (!existWallet) {
-        throw new NotFoundException('wallet not found');
-      }
-
-      return existWallet;
+      return await WalletsEntity.findOneBy({ id });
     } catch (error) {
       throw new HttpException(
         'failed to find the wallet',
@@ -46,17 +36,18 @@ export class WalletRepository {
     }
   }
 
-  async createTransactionHistory(
+  async transactionDepositOrWithdraw(
     wallet: WalletsEntity,
     { amount, type }: DepositOrWithdrawDto,
   ): Promise<TransactionHistoryEntity> {
-    wallet.availableBalance = BigNumber(wallet.availableBalance)
-      .minus(amount)
-      .toString();
+    wallet.availableBalance =
+      type === TransactionType.WITHDRAW
+        ? BigNumber(wallet.availableBalance).minus(amount).toNumber()
+        : wallet.availableBalance;
 
     const historyModel = new TransactionHistoryEntity();
     historyModel.wallet = wallet;
-    historyModel.amount = BigNumber(amount).toString();
+    historyModel.amount = amount;
     historyModel.type = type;
 
     let updatedModel: TransactionHistoryEntity;

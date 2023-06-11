@@ -7,7 +7,7 @@ import {
 export class CreateTransactionPresenter {
   id: number;
   walletId: string;
-  amount: string;
+  amount: number;
   type: TransactionType;
   status: TransactionStatus;
   createdAt: Date;

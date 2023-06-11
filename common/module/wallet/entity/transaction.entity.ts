@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { WalletsEntity } from 'common';
 import { TransactionStatus, TransactionType } from 'common/Enums/enums';
 import { CommonEntity } from 'common/entity/common.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { WalletsEntity } from './wallets.entity';
 
 @Entity({
   name: 'transaction_history',
@@ -15,8 +15,8 @@ export class TransactionHistoryEntity extends CommonEntity {
   @ManyToOne(() => WalletsEntity, (wallet) => wallet.id, { eager: true })
   wallet: WalletsEntity;
 
-  @Column({ nullable: false })
-  amount: string;
+  @Column({ type: 'numeric', nullable: false })
+  amount: number;
 
   @Column({ type: 'enum', name: 'type', enum: TransactionType })
   type: TransactionType;

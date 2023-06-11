@@ -15,7 +15,7 @@ import {
   TransactionHistoryEntity,
   WalletsEntity,
 } from 'common';
-import { WalletService } from 'common/wallet/wallet.service';
+import { WalletService } from 'common/module/wallet/wallet.service';
 
 @Controller()
 export class WalletController {

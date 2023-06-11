@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { CreateWalletsDto, DepositOrWithdrawDto, EventType } from 'common';
-import { WalletService } from 'common/wallet/wallet.service';
+import { WalletService } from 'common/module/wallet/wallet.service';
 import { catchError, lastValueFrom, of } from 'rxjs';
 
 @Injectable()

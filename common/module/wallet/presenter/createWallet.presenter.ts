@@ -2,9 +2,9 @@ import { WalletsEntity } from '../entity/wallets.entity';
 
 export class WalletPresenter {
   id: string;
-  availableBalance: string;
-  pendingDeposit?: string;
-  pendingWithdraw?: string;
+  availableBalance: number;
+  pendingDeposit?: number;
+  pendingWithdraw?: number;
   createdAt: Date;
   updatedAt: Date;
 

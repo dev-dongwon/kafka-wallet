@@ -11,14 +11,14 @@ export class WalletsEntity extends CommonEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  availableBalance: string;
+  @Column({ type: 'numeric' })
+  availableBalance: number;
 
-  @Column({nullable: true, default: null })
-  pendingWithdraw?: string | null;
+  @Column({ type: 'numeric', nullable: true, default: null })
+  pendingWithdraw?: number | null;
 
-  @Column({nullable: true, default: null })
-  pendingDeposit?: string | null;
+  @Column({ type: 'numeric', nullable: true, default: null })
+  pendingDeposit?: number | null;
 
   @OneToMany(
     () => TransactionHistoryEntity,
