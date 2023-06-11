@@ -1,7 +1,7 @@
 import { TransactionStatus, TransactionType } from "common";
 
 export interface TransactionHistoryResponseInterface {
-  id: string;
+  id: number;
   walletId: string;
   amount: string;
   type: TransactionType;

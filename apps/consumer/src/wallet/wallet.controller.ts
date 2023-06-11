@@ -9,13 +9,13 @@ import {
   MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import { WalletService } from './wallet.service';
 import {
   DepositOrWithdrawDto,
   EventType,
   TransactionHistoryEntity,
   WalletsEntity,
 } from 'common';
+import { WalletService } from 'common/wallet/wallet.service';
 
 @Controller()
 export class WalletController {
@@ -27,7 +27,7 @@ export class WalletController {
     @Payload() message: { balance: number },
     @Ctx() context: KafkaContext,
   ): Promise<WalletsEntity> {
-    return await this.walletService.createWallet(message.balance);
+    return await this.walletService.createWallet({balance: message.balance});
   }
 
   @UseInterceptors(ClassSerializerInterceptor)

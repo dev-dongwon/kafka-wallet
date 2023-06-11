@@ -1,14 +1,23 @@
 import { Module } from '@nestjs/common';
-import { ConsumerController } from './consumer.controller';
-import { ConsumerService } from './consumer.service';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from 'common';
-import { WalletModule } from './wallet/wallet.module';
+import { TypeOrmConfigService, WalletModule } from 'common';
+import { WalletController } from './wallet/wallet.controller';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+        },
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -30,7 +39,7 @@ import { WalletModule } from './wallet/wallet.module';
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
     WalletModule,
   ],
-  controllers: [ConsumerController],
-  providers: [ConsumerService],
+  controllers: [WalletController],
+  providers: [],
 })
 export class ConsumerModule {}

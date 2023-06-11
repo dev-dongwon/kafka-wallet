@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { WalletsEntity } from '../../../../common/wallet/entity/wallets.entity';
 import BigNumber from 'bignumber.js';
 import { DataSource } from 'typeorm';
-import { DepositOrWithdrawDto, TransactionHistoryEntity } from 'common';
+import {
+  DepositOrWithdrawDto,
+  TransactionHistoryEntity,
+  WalletsEntity,
+} from 'common';
 
 @Injectable()
 export class WalletRepository {
