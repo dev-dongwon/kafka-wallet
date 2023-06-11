@@ -1,5 +1,4 @@
 import { ProcessTransactionResponseInterface } from 'common';
-import { WalletsEntity } from '../entity/wallets.entity';
 
 export class ProcessTransactionsPresenter {
   completedDepositCount: number;

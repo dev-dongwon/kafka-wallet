@@ -2,36 +2,36 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { WalletRepository } from './wallet.repository';
 import { CreateWalletsDto, DepositOrWithdrawDto } from './dto';
-import {
-  ErrorMessage,
-  PaginationOrder,
-  TransactionHistoryEntity,
-  TransactionStatus,
-  TransactionType,
-  WalletsEntity,
-} from 'common';
+import { ErrorMessage, TransactionType } from 'common';
 import { isUUID } from 'class-validator';
 import BigNumber from 'bignumber.js';
-import { DataSource } from 'typeorm';
 
 @Injectable()
 export class WalletService {
-  constructor(
-    private readonly walletRepository: WalletRepository,
-    private dataSource: DataSource,
-  ) {}
+  constructor(private readonly walletRepository: WalletRepository) {}
 
-  async getWallet(id: string) {
+  async findById(id: string) {
     this.validateWalletId(id);
-    return await this.walletRepository.findOneWallet(id);
-  }
 
-  async findOneTransaction(id: number) {
-    return await this.walletRepository.findOneTransactions(id);
+    try {
+      const existWallet = await this.walletRepository.findById(id);
+
+      if (!existWallet) {
+        throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
+      }
+
+      return existWallet;
+    } catch (error) {
+      throw new HttpException(
+        ErrorMessage.FAILED_TASK_PROCESSING,
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
   }
 
   public validateWalletId(id: string) {
@@ -55,7 +55,7 @@ export class WalletService {
   ) {
     const { walletId, amount, type } = depositOrWithdrawDto;
 
-    const existWallet = await this.getWallet(walletId);
+    const existWallet = await this.findById(walletId);
 
     if (
       new BigNumber(existWallet.availableBalance).minus(amount).isLessThan(0) &&
@@ -71,128 +71,12 @@ export class WalletService {
     this.validateCreateWalletDto(createWalletDto);
 
     const { balance } = createWalletDto;
-    return await this.walletRepository.create(balance);
-  }
-
-  async depositOrWithdraw(
-    depositOrWithdrawDto: DepositOrWithdrawDto,
-  ): Promise<TransactionHistoryEntity> {
-    const existWallet = await this.walletRepository.findOneWallet(
-      depositOrWithdrawDto.walletId,
-    );
-
-    return await this.walletRepository.createTransactionHistory(
-      existWallet,
-      depositOrWithdrawDto,
-    );
-  }
-
-  async findAllTransactions(filter: {
-    limit?: number;
-    offset?: number;
-    type?: TransactionType;
-    status?: TransactionStatus;
-    walletId?: string;
-    order?: PaginationOrder;
-  }) {
-    const queryBuilder = this.dataSource
-      .getRepository(TransactionHistoryEntity)
-      .createQueryBuilder('transactions')
-      .leftJoinAndSelect('transactions.wallet', 'wallet');
-
-    if (filter.walletId) {
-      this.validateWalletId(filter.walletId);
-      queryBuilder.andWhere('transactions.wallet = :id', {
-        id: filter.walletId,
-      });
-    }
-
-    if (filter.status) {
-      queryBuilder.andWhere('transactions.status = :status', {
-        status: filter.status,
-      });
-    }
-
-    if (filter.type) {
-      queryBuilder.andWhere('transactions.type = :type', { type: filter.type });
-    }
-
-    queryBuilder.orderBy(
-      'transactions.createdAt',
-      filter.order ?? PaginationOrder.ASC,
-    );
-
-    if (filter.limit) {
-      queryBuilder.take(filter.limit);
-    }
-
-    if (filter.offset) {
-      queryBuilder.skip((filter.offset - 1) * filter.limit);
-    }
-
-    const totalCount = await queryBuilder.getCount();
-    const transactions = await queryBuilder.getMany();
-
-    return {
-      data: transactions,
-      metadata:
-        filter.limit && filter.offset
-          ? {
-              ...this.getPaginationMetadata(
-                totalCount,
-                filter.offset,
-                filter.limit,
-              ),
-            }
-          : undefined,
-    };
-  }
-
-  private getPaginationMetadata(
-    totalCount: number,
-    currentOffset: number,
-    limit: number,
-  ) {
-    const lastIndex = Math.ceil(totalCount / limit);
-    const nextIndex = currentOffset + 1 > lastIndex ? null : currentOffset + 1;
-
-    return {
-      totalCount,
-      nextIndex,
-      lastIndex,
-    };
-  }
-
-  async processPendingTransactions(
-    transaction: TransactionHistoryEntity,
-    wallet: WalletsEntity,
-  ): Promise<void> {
-    if (transaction.type === TransactionType.WITHDRAW) {
-      wallet.pendingWithdraw = BigNumber(wallet.pendingWithdraw)
-        .minus(transaction.amount)
-        .toNumber();
-    }
-
-    if (transaction.type === TransactionType.DEPOSIT) {
-      wallet.pendingDeposit = BigNumber(wallet.pendingDeposit)
-        .minus(transaction.amount)
-        .toNumber();
-
-      wallet.availableBalance = BigNumber(wallet.availableBalance)
-        .plus(transaction.amount)
-        .toNumber();
-    }
-
-    transaction.status = TransactionStatus.COMPLETED;
 
     try {
-      await this.dataSource.transaction('SERIALIZABLE', async (manager) => {
-        await manager.save(wallet);
-        await manager.save(transaction);
-      });
+      return await this.walletRepository.create(balance);
     } catch (error) {
       throw new HttpException(
-        ErrorMessage.DB_TRANSACTION_FAILED,
+        ErrorMessage.CREATE_RESOURCE_FAILED,
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

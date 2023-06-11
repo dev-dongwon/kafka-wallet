@@ -23,6 +23,7 @@ import {
 } from 'common';
 import { DepositOrWithdrawDto } from 'common/module/wallet/dto/depositOrWithdraw.dto';
 import { WalletService } from 'common/module/wallet/wallet.service';
+import { TransactionService } from 'common/module/transaction/tranasaction.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('api/transactions')
@@ -30,6 +31,7 @@ export class TransactionsController {
   constructor(
     private readonly apiService: ApiService,
     private readonly walletService: WalletService,
+    private readonly transactionService: TransactionService,
   ) {}
   @Post('')
   async depositOrWithdraw(
@@ -39,7 +41,7 @@ export class TransactionsController {
       depositOrWithdrawDto,
     );
 
-    const transactionHistory = await this.walletService.findOneTransaction(
+    const transactionHistory = await this.transactionService.findById(
       message.id,
     );
 
@@ -48,7 +50,7 @@ export class TransactionsController {
 
   @Patch('')
   async processTransactions(): Promise<ProcessTransactionResponseInterface> {
-    const { data } = await this.walletService.findAllTransactions({
+    const { data } = await this.transactionService.findAllTransactions({
       status: TransactionStatus.PENDING,
     });
 
@@ -64,13 +66,24 @@ export class TransactionsController {
     @Query('startIndex') startIndex?: string,
     @Query('order') order?: PaginationOrder,
   ): Promise<getTransactionsResponse> {
-    const { data, metadata } = await this.walletService.findAllTransactions({
-      walletId,
-      limit: limit ? Number(limit) : DEFAULT_GET_TRANSACTION_LIMIT,
-      offset: startIndex ? Number(startIndex) : DEFAULT_GET_TRANSACTION_OFFSET,
-      order: order ?? PaginationOrder.DESC,
-    });
+    const { data, metadata } =
+      await this.transactionService.findAllTransactions({
+        walletId,
+        limit: limit ? Number(limit) : DEFAULT_GET_TRANSACTION_LIMIT,
+        offset: startIndex
+          ? Number(startIndex)
+          : DEFAULT_GET_TRANSACTION_OFFSET,
+        order: order ?? PaginationOrder.DESC,
+      });
 
     return new GetTransactionsPresenter(data, metadata);
+  }
+
+  @Get('test')
+  async test(): Promise<any> {
+    const a = await this.transactionService.findById(1);
+
+    console.log(a);
+    return null;
   }
 }
