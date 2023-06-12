@@ -242,6 +242,7 @@ export class TransactionService {
     historyModel.amount = amount;
     historyModel.type = type;
 
+    // 모델 생성 및 업데이트 후 두 모델 묶어서 트랜잭션 작업
     return await this.transactionRepository.transactionTaskToCreateTransactionHistory(
       historyModel,
       calculatedWallet,

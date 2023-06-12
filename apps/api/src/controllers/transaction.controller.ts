@@ -24,6 +24,7 @@ import {
 import { DepositOrWithdrawDto } from 'common/module/wallet/dto/depositOrWithdraw.dto';
 import { WalletService } from 'common/module/wallet/wallet.service';
 import { TransactionService } from 'common/module/transaction/tranasaction.service';
+import { GetTransactionsDto } from 'common/module/wallet/dto/getTransactions.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('api/transactions')
@@ -33,6 +34,7 @@ export class TransactionsController {
     private readonly walletService: WalletService,
     private readonly transactionService: TransactionService,
   ) {}
+  // 입출금 엔드 포인트
   @Post('')
   async depositOrWithdraw(
     @Body() depositOrWithdrawDto: DepositOrWithdrawDto,
@@ -48,6 +50,7 @@ export class TransactionsController {
     return new CreateTransactionPresenter(transactionHistory);
   }
 
+  // 거래 처리 엔드 포인트
   @Patch('')
   async processTransactions(): Promise<ProcessTransactionResponseInterface> {
     const { data } = await this.transactionService.findAllTransactions({
@@ -59,13 +62,12 @@ export class TransactionsController {
     return new ProcessTransactionsPresenter(completedCounts);
   }
 
+  // 거래 내역 리스트 조회 엔드 포인트
   @Get('')
   async getTransactions(
-    @Query('walletId') walletId: string,
-    @Query('limit') limit?: string,
-    @Query('startIndex') startIndex?: string,
-    @Query('order') order?: PaginationOrder,
+    @Query() getTransactionDto: GetTransactionsDto
   ): Promise<getTransactionsResponse> {
+    const { walletId, limit, startIndex, order, status } = getTransactionDto
     const { data, metadata } =
       await this.transactionService.findAllTransactions({
         walletId,
@@ -74,6 +76,7 @@ export class TransactionsController {
           ? Number(startIndex)
           : DEFAULT_GET_TRANSACTION_OFFSET,
         order: order ?? PaginationOrder.DESC,
+        status: status ?? undefined,
       });
 
     return new GetTransactionsPresenter(data, metadata);

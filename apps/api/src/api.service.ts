@@ -30,6 +30,7 @@ export class ApiService implements OnModuleInit {
     await this.client.connect();
   }
 
+  // kafka에서 에러 메시지가 왔을 경우 핸들링
   private kafkaErrorHandling(response: Object, message: string) {
     if (Object.keys(response).includes('error')) {
       throw new HttpException(message, HttpStatus.UNPROCESSABLE_ENTITY);

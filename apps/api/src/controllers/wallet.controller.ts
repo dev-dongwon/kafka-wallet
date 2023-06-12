@@ -23,6 +23,7 @@ export class WalletController {
     private readonly walletService: WalletService,
   ) {}
 
+  // 지갑 생성 엔드 포인트
   @Post('')
   async createWallet(
     @Body() createWalletDto: CreateWalletsDto,
@@ -33,6 +34,7 @@ export class WalletController {
     return new WalletPresenter(wallet);
   }
 
+  // 지갑 조회 엔드 포인트
   @Get(':id')
   async getWallet(@Param('id') id: string): Promise<WalletResponseInterface> {
     const wallet = await this.walletService.findById(id);
