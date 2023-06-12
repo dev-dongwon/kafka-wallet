@@ -11,6 +11,24 @@
 - 자원의 생성 및 비즈니스 로직 처리는 consumer에서, 요청 및 응답 전달, 최종 자원 확인은 api server에서 담당합니다.
 - 직접 db를 조회할 수 있는 일부 get method의 경우 kafka를 거치지 않고 api server에서 직접 처리합니다
 
+## 폴더 구조
+- apps
+  - api
+    - api microservice server
+    - consumer server에 요청하고 응답을 내려주는 api controller 포함
+    - port: 3000
+  - consumer
+    - consumer microservice server
+    - api server에서 메시지를 받아 비즈니스 로직 처리 후 api에 응답 반환
+    - port: 3001
+- common
+  - constant: 코드에 쓰이는 상수 모음
+  - database: typeorm 및 postgres 연결에 필요한 서비스
+  - entiy: active record를 위해 상속할 base entity
+  - enums: enum 모음
+  - module
+    - transaction: transaction 관련 로직을 처리하는 공통 모듈
+    - wallet: wallet 관련 로직을 처리하는 공통 모듈
 ## 사용 기술
 ```bash
 $ 사용 프레임워크 및 인프라: nest.js, kafka, Docker, Docker-compose
@@ -20,13 +38,14 @@ $ 테스트: jest
 ```
 ## 인스톨 및 실행
 ```bash
-root folder (/wallet) 에서
+$ yarn install
+
+이후 root folder (/wallet) 에서
 $ docker-compose up
 ```
 
 ## Unit Test
 ```bash
-$ yarn install
 $ yarn run test
 ```
 
