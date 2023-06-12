@@ -6,4 +6,5 @@ export enum ErrorMessage {
   BALANCE_UNDER_ZERO = 'balance must be greater than 0',
   BALANCE_UNDER_WITHDRAW = 'availableBalance must be greater than withdraw amount',
   DB_TRANSACTION_FAILED = 'database transaction is failed',
+  NOT_ALLOWED_TRANSACTION = 'amount must be greater than zero',
 }

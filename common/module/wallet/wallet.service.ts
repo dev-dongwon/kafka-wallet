@@ -57,6 +57,12 @@ export class WalletService {
 
     const existWallet = await this.findById(walletId);
 
+    if (amount <= 0) {
+      throw new UnprocessableEntityException(
+        ErrorMessage.NOT_ALLOWED_TRANSACTION,
+      );
+    }
+
     if (
       new BigNumber(existWallet.availableBalance).minus(amount).isLessThan(0) &&
       type === TransactionType.WITHDRAW

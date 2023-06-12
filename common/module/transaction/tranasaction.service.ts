@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
   DepositOrWithdrawDto,
@@ -187,9 +188,34 @@ export class TransactionService {
     return wallet;
   }
 
+  private async validateDepositOrWithdrawDto(
+    depositOrWithdrawDto: DepositOrWithdrawDto,
+  ) {
+    const { walletId, amount, type } = depositOrWithdrawDto;
+
+    if (amount <= 0) {
+      throw new UnprocessableEntityException(
+        ErrorMessage.NOT_ALLOWED_TRANSACTION,
+      );
+    }
+
+    const existWallet = await this.walletService.findById(walletId);
+
+    if (
+      new BigNumber(existWallet.availableBalance).minus(amount).isLessThan(0) &&
+      type === TransactionType.WITHDRAW
+    ) {
+      throw new UnprocessableEntityException(
+        ErrorMessage.BALANCE_UNDER_WITHDRAW,
+      );
+    }
+  }
+
   public async depositOrWithdraw(
     depositOrWithdrawDto: DepositOrWithdrawDto,
   ): Promise<TransactionHistoryEntity> {
+    await this.validateDepositOrWithdrawDto(depositOrWithdrawDto);
+
     const existWallet = await this.walletService.findById(
       depositOrWithdrawDto.walletId,
     );
