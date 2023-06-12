@@ -42,6 +42,8 @@ $ yarn install
 
 이후 root folder (/wallet) 에서
 $ docker-compose up
+
+** docker 이미지가 다소 무거워 완전한 구동까지 1-2분 정도로, 다소 시간이 걸릴 수 있습니다
 ```
 
 ## Unit Test
