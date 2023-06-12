@@ -1,12 +1,12 @@
 # 입출금 API 개발 - 백엔드 엔지니어 지원 김동원
 ## Description
 - 본 프로젝트는 nest.js에서 지원하는 kafka microservice를 활용해 만들었습니다.
-- 가상의 거래소에서 실제로 입출금 이벤트가 대량으로 발생하는 상황을 가정, 안정적인 request 전달과 메시지 큐잉이 필요하다는 판단에서 해당 기술을 선택했습니다.
+- 가상의 거래소에서 실제로 입출금 이벤트가 대량으로 발생하는 상황을 가정, ```안정적인 request 전달과 메시지 큐잉```이 필요하다는 판단에서 해당 기술을 선택했습니다.
 
-- 구조는 크게 api server, kafka broker, consumer server로 나누어져 있습니다.
-  - api server는 최초 요청 및 최종 자원 확인
-  - kafka broker는 안정적인 요청 전달 및 메시지 큐잉
-  - consumer server는 비즈니스 로직 처리의 기능을 각각 담당
+- 구조는 크게 ```api server, kafka broker, consumer server```로 나누어져 있습니다.
+  - api server: 최초 요청 및 최종 자원 확인
+  - kafka broker: 안정적인 요청 전달 및 메시지 큐잉
+  - consumer server: 자원 생성 및 비즈니스 로직 처리
 
 - 자원의 생성 및 비즈니스 로직 처리는 consumer에서, 요청 및 응답 전달, 최종 자원 확인은 api server에서 담당합니다.
 - 직접 db를 조회할 수 있는 일부 get method의 경우 kafka를 거치지 않고 api server에서 직접 처리합니다
@@ -34,6 +34,13 @@ $ yarn run test
 ```bash
 $ http://localhost:3000
 ```
+
+## kafka UI
+```bash
+아래 주소에서 kafka에서 생성된 토픽 및 메시지를 확인할 수 있습니다
+$ http://localhost:8080
+```
+
 
 ## API 스펙
 
