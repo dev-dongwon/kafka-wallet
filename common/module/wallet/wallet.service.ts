@@ -17,8 +17,6 @@ export class WalletService {
 
   async findById(id: string) {
     this.validateWalletId(id);
-
-    try {
       const existWallet = await this.walletRepository.findById(id);
 
       if (!existWallet) {
@@ -26,12 +24,6 @@ export class WalletService {
       }
 
       return existWallet;
-    } catch (error) {
-      throw new HttpException(
-        ErrorMessage.FAILED_TASK_PROCESSING,
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
   }
 
   public validateWalletId(id: string) {

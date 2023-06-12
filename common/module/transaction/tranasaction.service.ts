@@ -1,6 +1,4 @@
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -28,23 +26,16 @@ export class TransactionService {
   ) {}
 
   public async findById(id: number) {
-    try {
-      const transaction = await this.transactionRepository.findById(id);
+    const transaction = await this.transactionRepository.findById(id);
 
-      if (!transaction) {
-        throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
-      }
-
-      return transaction;
-    } catch (error) {
-      throw new HttpException(
-        ErrorMessage.FAILED_TASK_PROCESSING,
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+    if (!transaction) {
+      throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
     }
+
+    return transaction;
   }
 
-  public async findAllTransactions(filter: {
+  public async buildQueryForFindAllTransactions(filter: {
     limit?: number;
     offset?: number;
     type?: TransactionType;
@@ -88,10 +79,28 @@ export class TransactionService {
     }
 
     const totalCount = await queryBuilder.getCount();
-    const transactions = await queryBuilder.getMany();
+    const data = await queryBuilder.getMany();
 
     return {
-      data: transactions,
+      totalCount,
+      data,
+    };
+  }
+
+  public async findAllTransactions(filter: {
+    limit?: number;
+    offset?: number;
+    type?: TransactionType;
+    status?: TransactionStatus;
+    walletId?: string;
+    order?: PaginationOrder;
+  }) {
+    const { totalCount, data } = await this.buildQueryForFindAllTransactions(
+      filter,
+    );
+
+    return {
+      data,
       metadata:
         filter.limit && filter.offset
           ? {

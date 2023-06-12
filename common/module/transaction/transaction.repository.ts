@@ -2,7 +2,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
@@ -16,20 +15,7 @@ export class TransactionRepository {
   constructor(private dataSource: DataSource) {}
 
   async findById(id: number): Promise<TransactionHistoryEntity> {
-    try {
-      const transaction = await TransactionHistoryEntity.findOneBy({ id });
-
-      if (!transaction) {
-        throw new NotFoundException(ErrorMessage.RESOURCE_NOT_FOUND);
-      }
-
-      return transaction;
-    } catch (error) {
-      throw new HttpException(
-        ErrorMessage.FAILED_TASK_PROCESSING,
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
-    }
+    return await TransactionHistoryEntity.findOneBy({ id });
   }
 
   async transactionTaskWithWalletAndTransactionHistory(

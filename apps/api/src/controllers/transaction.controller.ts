@@ -78,12 +78,4 @@ export class TransactionsController {
 
     return new GetTransactionsPresenter(data, metadata);
   }
-
-  @Get('test')
-  async test(): Promise<any> {
-    const a = await this.transactionService.findById(1);
-
-    console.log(a);
-    return null;
-  }
 }

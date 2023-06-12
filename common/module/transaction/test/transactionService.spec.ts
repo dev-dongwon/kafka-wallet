@@ -2,7 +2,6 @@ import { Test } from '@nestjs/testing';
 import { TransactionService } from '../tranasaction.service';
 import { TransactionRepository } from '../transaction.repository';
 import { WalletService } from 'common/module/wallet/wallet.service';
-import { WalletRepository } from 'common/module/wallet/wallet.repository';
 import { faker } from '@faker-js/faker';
 import { DataSource } from 'typeorm';
 import { TransactionHistoryEntity, WalletsEntity } from 'common/module/wallet';
@@ -15,6 +14,7 @@ import { ErrorMessage, TransactionType } from 'common/Enums';
 const transactionMockRepository = () => ({
   findById: jest.fn(),
   transactionTaskToCreateTransactionHistory: jest.fn(),
+  buildQueryForFindAllTransactions: jest.fn(),
 });
 
 const walletMockService = () => ({
@@ -22,9 +22,11 @@ const walletMockService = () => ({
   create: jest.fn(),
 });
 
-// @ts-ignore
 const dataSourceMockFactory: () => MockType<DataSource> = jest.fn(() => ({
+  getRepository: jest.fn(),
+  createQueryBuilder: jest.fn(),
   transaction: jest.fn(),
+  leftJoinAndSelect: jest.fn(),
 }));
 
 type MockType<T> = {
@@ -35,8 +37,23 @@ describe('TransactionService', () => {
   let transactionService: TransactionService;
   let walletService: WalletService;
   let transactionRepository: TransactionRepository;
-  let walletRepository: WalletRepository;
   let dataSourceMock: MockType<DataSource>;
+
+  const mockWallet = new WalletsEntity();
+  mockWallet.id = faker.string.uuid();
+  mockWallet.availableBalance = 0;
+  mockWallet.createdAt = new Date();
+  mockWallet.updatedAt = new Date();
+  mockWallet.pendingDeposit = 0;
+  mockWallet.pendingWithdraw = 0;
+
+  const mockTransactions = new TransactionHistoryEntity();
+  mockTransactions.wallet = mockWallet;
+  mockTransactions.type = TransactionType.DEPOSIT;
+  mockTransactions.id = faker.number.int();
+  mockTransactions.amount = 10;
+  mockTransactions.createdAt = new Date();
+  mockTransactions.updatedAt = new Date();
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -65,21 +82,6 @@ describe('TransactionService', () => {
   });
 
   describe('findById', () => {
-    const mockWallet = new WalletsEntity();
-    mockWallet.id = faker.string.uuid();
-    mockWallet.availableBalance = 0;
-    mockWallet.createdAt = new Date();
-    mockWallet.updatedAt = new Date();
-    mockWallet.pendingDeposit = 0;
-    mockWallet.pendingWithdraw = 0;
-
-    const mockTransactions = new TransactionHistoryEntity();
-    mockTransactions.wallet = mockWallet;
-    mockTransactions.id = faker.number.int();
-    mockTransactions.amount = 10;
-    mockTransactions.createdAt = new Date();
-    mockTransactions.updatedAt = new Date();
-
     describe('when model exist', () => {
       it('should get exist model by id', async () => {
         jest
@@ -107,21 +109,9 @@ describe('TransactionService', () => {
   });
 
   describe('depositOrWithdraw', () => {
-    const mockWallet = new WalletsEntity();
-    mockWallet.id = faker.string.uuid();
     mockWallet.availableBalance = 100;
-    mockWallet.createdAt = new Date();
-    mockWallet.updatedAt = new Date();
-    mockWallet.pendingDeposit = 0;
-    mockWallet.pendingWithdraw = 0;
-
-    const mockTransactions = new TransactionHistoryEntity();
-    mockTransactions.wallet = mockWallet;
     mockTransactions.type = TransactionType.DEPOSIT;
-    mockTransactions.id = faker.number.int();
     mockTransactions.amount = 10;
-    mockTransactions.createdAt = new Date();
-    mockTransactions.updatedAt = new Date();
 
     describe('when transaction amount is zero', () => {
       it('should throw error', async () => {
@@ -174,6 +164,60 @@ describe('TransactionService', () => {
           expect(error).toBeInstanceOf(UnprocessableEntityException);
           expect(error.message).toEqual(ErrorMessage.FAILED_TASK_PROCESSING);
         }
+      });
+    });
+  });
+
+  describe('findAllTransactions', () => {
+    const mockData = new Array(faker.number.int({ max: 20 })).fill(
+      mockTransactions,
+    ) as TransactionHistoryEntity[];
+
+    describe('when limit and offset are not given', () => {
+      let limit: number;
+      let offset: number;
+
+      it('should get only transaction data', async () => {
+        jest
+          .spyOn(transactionService, 'buildQueryForFindAllTransactions')
+          .mockResolvedValueOnce({
+            totalCount: mockData.length,
+            data: mockData,
+          });
+
+        const { metadata, data } = await transactionService.findAllTransactions(
+          {
+            limit,
+            offset,
+          },
+        );
+
+        expect(metadata).toBeUndefined();
+        expect(data).toEqual(data);
+      });
+    });
+
+    describe('when current offset is lastOffset ', () => {
+      let limit = 50;
+      let offset = 1;
+
+      it('should be null nextIndex', async () => {
+        jest
+          .spyOn(transactionService, 'buildQueryForFindAllTransactions')
+          .mockResolvedValueOnce({
+            totalCount: mockData.length,
+            data: mockData,
+          });
+
+        const { metadata, data } = await transactionService.findAllTransactions(
+          {
+            limit,
+            offset,
+          },
+        );
+
+        expect(metadata.nextIndex).toBeNull();
+        expect(data).toEqual(data);
       });
     });
   });
