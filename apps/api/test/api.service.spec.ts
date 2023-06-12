@@ -2,7 +2,6 @@ import { Test } from '@nestjs/testing';
 import { ApiService } from '../src/api.service';
 import { ClientKafka } from '@nestjs/microservices';
 import { faker } from '@faker-js/faker';
-import { Observable, of } from 'rxjs';
 import { HttpException } from '@nestjs/common';
 import { ErrorMessage } from 'common';
 
